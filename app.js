@@ -506,6 +506,7 @@ const viewerIcon = document.getElementById('viewerIcon');
 const viewerDownloadBtn = document.getElementById('viewerDownload');
 const viewerDeleteBtn = document.getElementById('viewerDelete');
 const viewerCloseBtn = document.getElementById('viewerClose');
+const viewerAvailable = !!(viewerBackdrop && viewerBody && viewerTitle && viewerMeta && viewerIcon && viewerDownloadBtn && viewerDeleteBtn && viewerCloseBtn);
 
 let viewerEntry = null;
 let viewerObjectUrl = null;
@@ -519,6 +520,11 @@ function extOf(name) {
 }
 
 async function openViewer(entry) {
+  if (!viewerAvailable) {
+    console.warn('El visor no está disponible: index.html parece desactualizado respecto a app.js. Descargando el archivo directamente.');
+    downloadEntry(entry);
+    return;
+  }
   viewerEntry = entry;
   lastFocusedEl = document.activeElement;
 
@@ -606,23 +612,25 @@ async function renderPreview(entry) {
   }
 }
 
-viewerCloseBtn.addEventListener('click', closeViewer);
-viewerDownloadBtn.addEventListener('click', () => viewerEntry && downloadEntry(viewerEntry));
-viewerDeleteBtn.addEventListener('click', async () => {
-  if (!viewerEntry) return;
-  if (!confirm(`¿Eliminar el archivo "${viewerEntry.name}"?`)) return;
-  await dbDelete(viewerEntry.id);
-  toast('Eliminado');
-  closeViewer();
-  render();
-});
+if (viewerAvailable) {
+  viewerCloseBtn.addEventListener('click', closeViewer);
+  viewerDownloadBtn.addEventListener('click', () => viewerEntry && downloadEntry(viewerEntry));
+  viewerDeleteBtn.addEventListener('click', async () => {
+    if (!viewerEntry) return;
+    if (!confirm(`¿Eliminar el archivo "${viewerEntry.name}"?`)) return;
+    await dbDelete(viewerEntry.id);
+    toast('Eliminado');
+    closeViewer();
+    render();
+  });
 
-viewerBackdrop.addEventListener('click', (e) => {
-  if (e.target === viewerBackdrop) closeViewer();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !viewerBackdrop.hidden) closeViewer();
-});
+  viewerBackdrop.addEventListener('click', (e) => {
+    if (e.target === viewerBackdrop) closeViewer();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !viewerBackdrop.hidden) closeViewer();
+  });
+}
 
 /* ---------------- Init ---------------- */
 
