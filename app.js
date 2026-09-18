@@ -9,8 +9,11 @@ const DB_NAME = 'archivo-db';
 const DB_VERSION = 1;
 const STORE = 'entries';
 
+const ROOT_ID = 'root'; // IndexedDB no permite indexar por null/undefined,
+                         // así que la carpeta raíz usa este id en vez de null.
+
 let db = null;
-let currentFolderId = null; // null = raíz
+let currentFolderId = ROOT_ID;
 const path = []; // pila de {id, name} desde la raíz hasta la carpeta actual
 
 /* ---------------- IndexedDB helpers ---------------- */
@@ -66,6 +69,31 @@ function dbDelete(id) {
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });
+}
+
+function dbGetAllRaw() {
+  return new Promise((resolve, reject) => {
+    const req = tx('readonly').getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/* Entradas creadas por una versión anterior guardaban parentId como null
+   para la raíz. IndexedDB no puede indexar por null, así que esas entradas
+   quedaban invisibles (guardadas, pero nunca devueltas por el índice).
+   Esto las migra una sola vez a ROOT_ID para que vuelvan a aparecer. */
+async function migrateLegacyRootEntries() {
+  const all = await dbGetAllRaw();
+  const broken = all.filter(e => e.parentId === null || e.parentId === undefined);
+  for (const entry of broken) {
+    entry.parentId = ROOT_ID;
+    await dbPut(entry);
+  }
+  if (broken.length > 0) {
+    console.info(`Archivo: recuperadas ${broken.length} entrada(s) que estaban ocultas por el bug de la raíz.`);
+  }
+  return broken.length;
 }
 
 function dbCountAll() {
@@ -151,7 +179,7 @@ async function refreshStats() {
 
 function renderBreadcrumb() {
   breadcrumbEl.innerHTML = '';
-  const crumbs = [{ id: null, name: 'Inicio' }, ...path];
+  const crumbs = [{ id: ROOT_ID, name: 'Inicio' }, ...path];
   crumbs.forEach((crumb, i) => {
     const li = document.createElement('li');
     const btn = document.createElement('button');
@@ -641,6 +669,12 @@ if (viewerAvailable) {
     toast('No se pudo abrir el almacenamiento local de este navegador.');
     console.error(err);
     return;
+  }
+  try {
+    const recovered = await migrateLegacyRootEntries();
+    if (recovered > 0) toast(`Se recuperaron ${recovered} elemento${recovered === 1 ? '' : 's'} que estaban ocultos`);
+  } catch (err) {
+    console.error('No se pudo migrar entradas antiguas:', err);
   }
   render();
 })();
