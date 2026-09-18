@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archivo · Catálogo de carpetas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="dropOverlay" class="drop-overlay" aria-hidden="true">
+  <div class="drop-overlay__inner">
+    <div class="drop-overlay__icon">⤓</div>
+    <p>Suelta aquí para archivar en <strong id="dropOverlayTarget">Inicio</strong></p>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="masthead__brand">
+    <span class="masthead__mark">🗂️</span>
+    <div>
+      <h1>Archivo</h1>
+      <p class="masthead__tag">tu catálogo de carpetas, en este navegador</p>
+    </div>
+  </div>
+
+  <div class="masthead__stats" id="stats" aria-live="polite"></div>
+</header>
+
+<nav class="drawer-label" aria-label="Ruta actual">
+  <ol id="breadcrumb" class="breadcrumb"></ol>
+</nav>
+
+<main class="stage">
+  <div class="toolbar">
+    <button id="btnNewFolder" class="btn btn--primary">
+      <span class="btn__icon">＋</span> Nueva carpeta
+    </button>
+    <button id="btnUpload" class="btn">
+      <span class="btn__icon">⤒</span> Subir archivos
+    </button>
+    <input type="file" id="fileInput" multiple hidden>
+    <span class="toolbar__hint">o arrastra archivos y carpetas aquí</span>
+  </div>
+
+  <section id="grid" class="grid" aria-label="Contenido de la carpeta"></section>
+
+  <div id="emptyState" class="empty-state" hidden>
+    <div class="empty-state__icon">📭</div>
+    <p class="empty-state__title">Esta carpeta está vacía</p>
+    <p class="empty-state__body">Arrastra archivos aquí, o crea una carpeta nueva para empezar a ordenar.</p>
+  </div>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div id="viewerBackdrop" class="viewer-backdrop" hidden>
+  <div class="viewer" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+    <header class="viewer__bar">
+      <div class="viewer__title-wrap">
+        <span id="viewerIcon" class="viewer__icon">📄</span>
+        <div>
+          <h2 id="viewerTitle" class="viewer__title"></h2>
+          <p id="viewerMeta" class="viewer__meta"></p>
+        </div>
+      </div>
+      <div class="viewer__actions">
+        <button id="viewerDownload" class="btn">⤓ Descargar</button>
+        <button id="viewerDelete" class="btn btn--danger">✕ Eliminar</button>
+        <button id="viewerClose" class="btn" aria-label="Cerrar visor">Cerrar</button>
+      </div>
+    </header>
+    <div id="viewerBody" class="viewer__body"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
